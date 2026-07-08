@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Manage election', ~{::section}, ~{})}">
+    <section>
+        <div class="container" th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+            <a class="btn btn-ghost btn-sm mb-4" th:href="@{/dashboard}">← Back to dashboard</a>
+
+            <header class="row justify-between items-end mb-7">
+                <div>
+                    <p class="text-mono text-xs text-muted mb-1" th:text="${election.electionCode}">ELX-XXXXX</p>
+                    <h1 class="mb-1" th:text="${election.title}">Title</h1>
+                    <span class="badge"
+                          th:classappend="${election.status.name() == 'ACTIVE'    ? 'badge-success' :
+                                           election.status.name() == 'SCHEDULED' ? 'badge-warning' :
+                                           election.status.name() == 'CLOSED'   ? 'badge-muted'   : 'badge-info'}"
+                          th:text="${election.status}">DRAFT</span>
+                </div>
+                <div class="row gap-2">
+                    <a th:if="${election.status.name() != 'DRAFT'}"
+                       class="btn btn-secondary"
+                       th:href="@{/elections/{code}/results(code=${election.electionCode})}">Results</a>
+                    <a class="btn btn-secondary"
+                       th:href="@{/elections/{code}/chain(code=${election.electionCode})}">Chain</a>
+                    <a class="btn btn-secondary"
+                       th:href="@{/elections/{code}(code=${election.electionCode})}">Public page</a>
+                </div>
+            </header>
+
+            <!-- ====== Details ====== -->
+            <div class="card mb-6">
+                <div class="card-header">
+                    <h2 class="card-title">Details</h2>
+                    <p class="card-subtitle">Editable while the election is in DRAFT.</p>
+                </div>
+                <form th:if="${election.status.name() == 'DRAFT'}"
+                      th:action="@{/elections/{code}/meta(code=${election.electionCode})}"
+                      th:object="${metaForm}" method="post" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="m-title">Title</label>
+                        <input id="m-title" type="text" class="form-control" th:field="*{title}" maxlength="150" required>
+                        <span class="form-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="m-description">Description</label>
+                        <textarea id="m-description" class="form-textarea" th:field="*{description}" rows="3" maxlength="2000"></textarea>
+                    </div>
+                    <div class="grid grid-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label" for="m-start">Voting opens</label>
+                            <input id="m-start" type="datetime-local" class="form-control" th:field="*{startTime}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="m-end">Voting closes</label>
+                            <input id="m-end" type="datetime-local" class="form-control" th:field="*{endTime}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="m-maxv">Votes per voter</label>
+                        <input id="m-maxv" type="number" class="form-control" th:field="*{maxVotesPerVoter}" min="1" max="20">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save details</button>
+                </form>
+
+                <dl th:if="${election.status.name() != 'DRAFT'}" class="dl">
+                    <dt>Description</dt><dd th:text="${election.description} ?: '—'"></dd>
+                    <dt>Voting opens</dt>
+                    <dd th:text="${#temporals.format(election.startTime.atZone(zone), 'dd MMM yyyy HH:mm')}"></dd>
+                    <dt>Voting closes</dt>
+                    <dd th:text="${#temporals.format(election.endTime.atZone(zone), 'dd MMM yyyy HH:mm')}"></dd>
+                    <dt>Votes per voter</dt><dd th:text="${election.maxVotesPerVoter}"></dd>
+                </dl>
+            </div>
+
+            <!-- ====== Candidates ====== -->
+            <div class="card mb-6">
+                <div class="card-header">
+                    <h2 class="card-title">Candidates</h2>
+                    <p class="card-subtitle">Add at least 2 candidates before activating.</p>
+                </div>
+
+                <table class="table" th:if="${!election.candidates.isEmpty()}">
+                    <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th style="width: 80px;">Photo</th>
+                        <th>Name</th>
+                        <th>Party</th>
+                        <th>Description</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c, st : ${election.candidates}">
+                        <td class="text-mono text-sm align-middle" th:text="${st.count}">1</td>
+                        <td class="align-middle text-center">
+                            <img th:if="${c.photoPath != null}"
+                                 th:src="@{|/uploads/candidates/${c.photoPath}|}"
+                                 alt="Candidate photo"
+                                 style="width: 56px; height: 56px; object-fit: cover; object-position: center; border-radius: 50%; border: 1px solid var(--border, #dee2e6); display: inline-block; vertical-align: middle;"/>
+                            <span th:unless="${c.photoPath != null}"
+                                  style="width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--border, #dee2e6); background: #f1f3f5; color: #6c757d; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;">
+                                N/A
+                            </span>
+                        </td>
+                        <td class="align-middle" th:text="${c.name}">Name</td>
+                        <td class="align-middle" th:text="${c.party} ?: '—'">—</td>
+                        <td class="text-sm text-tertiary align-middle" th:text="${c.description} ?: '—'">—</td>
+                        <td class="text-right align-middle">
+                            <form th:if="${election.status.name() == 'DRAFT'}"
+                                  th:action="@{/elections/{code}/candidates/{id}/delete(code=${election.electionCode}, id=${c.id})}"
+                                  method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-ghost btn-sm text-danger"
+                                        onclick="return confirm('Remove this candidate?');">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <form th:if="${election.status.name() == 'DRAFT'}"
+                      th:action="@{/elections/{code}/candidates(code=${election.electionCode})}"
+                      th:object="${candidateForm}" method="post"
+                      enctype="multipart/form-data" class="mt-4" novalidate>
+                    <h3 class="mb-3">Add candidate</h3>
+                    <div class="grid grid-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label" for="c-name">Name <span class="required">*</span></label>
+                            <input id="c-name" type="text" class="form-control" th:field="*{name}" maxlength="150" required>
+                            <span class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="c-party">Party / affiliation</label>
+                            <input id="c-party" type="text" class="form-control" th:field="*{party}" maxlength="100">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="c-desc">Description</label>
+                        <textarea id="c-desc" class="form-textarea" th:field="*{description}" rows="2" maxlength="1000"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="c-photo">Photo</label>
+                        <input id="c-photo" type="file" class="form-control"
+                               th:field="*{photo}"
+                               accept="image/jpeg,image/png,image/webp">
+                        <small class="form-help">JPG, PNG, or WEBP. Max 2 MB. Optional.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add candidate</button>
+                </form>
+            </div>
+
+            <!-- ====== Voter schema ====== -->
+            <div class="card mb-6">
+                <div class="card-header">
+                    <h2 class="card-title">Voter schema</h2>
+                    <p class="card-subtitle">
+                        Define the columns of your voter roll CSV. Mark at least one
+                        <strong>identity</strong> field and exactly one <strong>contact</strong> (EMAIL) field.
+                    </p>
+                </div>
+
+                <table class="table" th:if="${!election.schemaFields.isEmpty()}">
+                    <thead>
+                    <tr>
+                        <th>#</th><th>Key</th><th>Label</th><th>Type</th>
+                        <th>Identity</th><th>Contact</th><th>Required</th><th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="f, st : ${election.schemaFields}">
+                        <td class="text-mono text-sm" th:text="${st.count}">1</td>
+                        <td class="text-mono text-sm" th:text="${f.fieldKey}">key</td>
+                        <td th:text="${f.fieldLabel}">Label</td>
+                        <td><span class="badge badge-muted" th:text="${f.fieldType}">TEXT</span></td>
+                        <td th:text="${f.identityField ? '✓' : ''}"></td>
+                        <td th:text="${f.contactField ? '✓' : ''}"></td>
+                        <td th:text="${f.required ? '✓' : ''}"></td>
+                        <td class="text-right">
+                            <form th:if="${election.status.name() == 'DRAFT' and !election.schemaLocked}"
+                                  th:action="@{/elections/{code}/schema/{id}/delete(code=${election.electionCode}, id=${f.id})}"
+                                  method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-ghost btn-sm text-danger"
+                                        onclick="return confirm('Remove this field?');">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <form th:if="${election.status.name() == 'DRAFT' and !election.schemaLocked}"
+                      th:action="@{/elections/{code}/schema(code=${election.electionCode})}"
+                      th:object="${schemaForm}" method="post" class="mt-4" novalidate>
+                    <h3 class="mb-3">Add field</h3>
+                    <div class="grid grid-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label" for="s-key">Field key <span class="required">*</span></label>
+                            <input id="s-key" type="text" class="form-control text-mono"
+                                   th:field="*{fieldKey}" pattern="[a-z][a-z0-9_]*" maxlength="50" required
+                                   placeholder="student_id">
+                            <small class="form-help">lowercase, digits, underscores. Used as the CSV header.</small>
+                            <span class="form-error" th:if="${#fields.hasErrors('fieldKey')}" th:errors="*{fieldKey}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="s-label">Label <span class="required">*</span></label>
+                            <input id="s-label" type="text" class="form-control"
+                                   th:field="*{fieldLabel}" maxlength="100" required
+                                   placeholder="Student ID">
+                            <span class="form-error" th:if="${#fields.hasErrors('fieldLabel')}" th:errors="*{fieldLabel}"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="s-type">Type</label>
+                        <select id="s-type" class="form-select" th:field="*{fieldType}">
+                            <option th:each="t : ${T(com.securevoting.entity.VoterFieldType).values()}"
+                                    th:value="${t}" th:text="${t}"></option>
+                        </select>
+                    </div>
+                    <div class="row gap-6 mb-4 wrap">
+                        <label class="form-check">
+                            <input type="checkbox" th:field="*{identityField}">
+                            <span>Identity field (used to match the voter)</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="checkbox" th:field="*{contactField}">
+                            <span>Contact field (EMAIL — used to send OTPs)</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="checkbox" th:field="*{required}">
+                            <span>Required</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add field</button>
+                </form>
+
+                <form th:if="${election.status.name() == 'DRAFT' and !election.schemaLocked and !election.schemaFields.isEmpty()}"
+                      th:action="@{/elections/{code}/schema/lock(code=${election.electionCode})}"
+                      method="post" class="mt-6 card-footer">
+                    <button type="submit" class="btn btn-secondary"
+                            onclick="return confirm('Lock the schema? You can\'t change fields after this.');">
+                        🔒 Lock schema
+                    </button>
+                    <span class="text-sm text-tertiary">Lock the schema before uploading the voter roll.</span>
+                </form>
+
+                <div th:if="${election.schemaLocked}" class="alert alert-info mt-4 mb-0">
+                    Schema is locked. CSV header must be exactly:
+                    <code class="text-mono"
+                          th:text="${#strings.listJoin(election.schemaFields.![fieldKey], ',')}">key1,key2</code>
+                </div>
+            </div>
+
+            <!-- ====== Voter roll ====== -->
+            <div class="card mb-6" th:if="${election.schemaLocked and election.status.name() == 'DRAFT'}">
+                <div class="card-header">
+                    <h2 class="card-title">Voter roll</h2>
+                    <p class="card-subtitle">Upload a UTF-8 CSV. Re-uploading replaces the roll.</p>
+                </div>
+                <p class="text-sm text-tertiary mb-4">
+                    Voters loaded: <strong th:text="${voterCount}">0</strong>
+                </p>
+                <form th:action="@{/elections/{code}/voter-roll(code=${election.electionCode})}"
+                      method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label class="form-label" for="vr-file">CSV file (max 5 MB)</label>
+                        <input id="vr-file" type="file" name="file" accept=".csv,text/csv" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+            </div>
+
+            <!-- ====== Invitations ====== -->
+            <div class="card mb-6" th:if="${voterCount != null and voterCount > 0}">
+                <div class="card-header">
+                    <h2 class="card-title">Invitations</h2>
+                    <p class="card-subtitle">
+                        Voters can only see and access this election after accepting their personal invitation link.
+                    </p>
+                </div>
+                <p class="text-sm text-tertiary mb-4">
+                    Generate a unique secure link for every voter on the roll and email each voter individually.
+                    Safe to click multiple times — invitations are idempotent.
+                </p>
+                <a th:href="@{/elections/{code}/invitations(code=${election.electionCode})}"
+                   class="btn btn-primary">Manage invitations →</a>
+            </div>
+
+            <!-- ====== Lifecycle ====== -->
+            <div class="card mb-6">
+                <div class="card-header">
+                    <h2 class="card-title">Lifecycle</h2>
+                </div>
+                <div th:if="${election.status.name() == 'DRAFT'}" class="row gap-3 wrap">
+                    <form th:action="@{/elections/{code}/activate(code=${election.electionCode})}" method="post">
+                        <button type="submit" class="btn btn-success"
+                                onclick="return confirm('Activate this election? Voters will be able to cast ballots in the voting window.');">
+                            ▶ Activate
+                        </button>
+                    </form>
+                    <form th:action="@{/elections/{code}/delete(code=${election.electionCode})}" method="post">
+                        <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('Delete this draft permanently?');">🗑 Delete draft</button>
+                    </form>
+                </div>
+                <form th:if="${election.status.name() == 'ACTIVE'}"
+                      th:action="@{/elections/{code}/close(code=${election.electionCode})}" method="post">
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('Close voting now? This cannot be undone.');">
+                        ⏹ Close election
+                    </button>
+                </form>
+                <p th:if="${election.status.name() == 'CLOSED'}" class="text-tertiary mb-0">
+                    This election is closed. Visit <a th:href="@{/elections/{code}/results(code=${election.electionCode})}">results</a>.
+                </p>
+            </div>
+
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

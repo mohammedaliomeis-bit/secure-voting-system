@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Dashboard', ~{::section}, ~{})}">
+    <section>
+        <div class="container" th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+
+            <header class="row justify-between items-end mb-7">
+                <div>
+                    <h1 class="mb-1">
+                        Hi<span th:if="${firstName != null and !firstName.isEmpty()}" th:text="' ' + ${firstName}"></span>.
+                    </h1>
+                    <p class="text-tertiary mb-0">Your secure voting overview.</p>
+                </div>
+                <a class="btn btn-primary" th:href="@{/elections/new}">Create election</a>
+            </header>
+
+            <!-- Flash messages -->
+            <div th:if="${info}" class="callout callout-success mb-4"
+                 style="padding: 12px 16px; border-radius: 8px; background: #d3f9d8; border: 1px solid #69db7c; color: #2b8a3e;">
+                <span th:text="${info}"></span>
+            </div>
+            <div th:if="${globalError}" class="callout callout-warning mb-4"
+                 style="padding: 12px 16px; border-radius: 8px; background: #fff5f5; border: 1px solid #ffa8a8; color: #c92a2a;">
+                <span th:text="${globalError}"></span>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-4 mb-7">
+                <div class="card">
+                    <p class="text-xs text-muted mb-1">Your invitations</p>
+                    <h2 class="mb-0" th:text="${invitedCount}">0</h2>
+                </div>
+                <div class="card">
+                    <p class="text-xs text-muted mb-1">Your active</p>
+                    <h2 class="mb-0" th:text="${activeCount}">0</h2>
+                </div>
+                <div class="card">
+                    <p class="text-xs text-muted mb-1">Your elections</p>
+                    <h2 class="mb-0" th:text="${createdCount}">0</h2>
+                </div>
+                <div class="card">
+                    <p class="text-xs text-muted mb-1">Blockchain blocks</p>
+                    <h2 class="mb-0" th:text="${chainBlocks}">0</h2>
+                </div>
+            </div>
+
+            <!-- Your invitations -->
+            <section id="invitations" class="mb-8">
+                <h2 class="mb-4">Your invitations</h2>
+                <div th:if="${invitedElections.isEmpty()}" class="card text-center">
+                    <p class="text-tertiary mb-0">
+                        You have no invitations yet. When an organizer invites you to an election,
+                        the link in your email will add it to this dashboard.
+                    </p>
+                </div>
+                <div th:if="${!invitedElections.isEmpty()}" class="grid grid-auto">
+                    <article th:each="e : ${invitedElections}" class="card">
+                        <header class="row justify-between items-start mb-3">
+                            <h3 class="mb-0" th:text="${e.title}">Title</h3>
+                            <span class="badge"
+                                  th:classappend="${e.status.name() == 'ACTIVE'    ? 'badge-success' :
+                                                   e.status.name() == 'SCHEDULED' ? 'badge-warning' :
+                                                   e.status.name() == 'CLOSED'   ? 'badge-muted'   : 'badge-info'}"
+                                  th:text="${e.status}">DRAFT</span>
+                        </header>
+                        <p class="text-sm text-tertiary mb-3" th:text="${e.description} ?: ''"></p>
+                        <p class="text-xs text-muted mb-4">
+                            <span th:if="${e.status.name() == 'ACTIVE'}">
+                                Closes <span th:text="${#temporals.format(e.endTime.atZone(zone), 'dd MMM HH:mm')}">soon</span>
+                            </span>
+                            <span th:if="${e.status.name() == 'SCHEDULED'}">
+                                Opens <span th:text="${#temporals.format(e.startTime.atZone(zone), 'dd MMM HH:mm')}">soon</span>
+                            </span>
+                            <span th:if="${e.status.name() == 'CLOSED'}">
+                                Closed <span th:text="${#temporals.format(e.endTime.atZone(zone), 'dd MMM HH:mm')}">already</span>
+                            </span>
+                            <span th:if="${e.status.name() == 'DRAFT'}">
+                                Not yet finalized by the organizer
+                            </span>
+                        </p>
+
+                        <!-- Smart CTA per status -->
+                        <a th:if="${e.status.name() == 'ACTIVE' and !e.alreadyVoted}"
+                           class="btn btn-primary btn-sm btn-block"
+                           th:href="@{/vote/{code}/identify(code=${e.electionCode})}">Vote now</a>
+
+                        <button th:if="${e.status.name() == 'ACTIVE' and e.alreadyVoted}"
+                                class="btn btn-secondary btn-sm btn-block" disabled type="button">
+                            ✓ Already voted
+                        </button>
+
+                        <button th:if="${e.status.name() == 'SCHEDULED'}"
+                                class="btn btn-secondary btn-sm btn-block" disabled type="button">
+                            Voting opens soon
+                        </button>
+
+                        <a th:if="${e.status.name() == 'CLOSED'}"
+                           class="btn btn-secondary btn-sm btn-block"
+                           th:href="@{/elections/{code}/results(code=${e.electionCode})}">View results</a>
+
+                        <button th:if="${e.status.name() == 'DRAFT'}"
+                                class="btn btn-secondary btn-sm btn-block" disabled type="button">
+                            Not yet open
+                        </button>
+
+                        <div class="text-center mt-2">
+                            <a class="text-xs text-tertiary"
+                               th:href="@{/elections/{code}/chain(code=${e.electionCode})}">View blockchain →</a>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Elections you voted in -->
+            <section class="mb-8" th:if="${votedElections != null and !votedElections.isEmpty()}">
+                <h2 class="mb-4">Elections you voted in</h2>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Voted at</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="e : ${votedElections}">
+                        <td class="text-mono text-sm" th:text="${e.electionCode}">ELX-XXXXX</td>
+                        <td th:text="${e.title}">Title</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${e.status.name() == 'ACTIVE'    ? 'badge-success' :
+                                                   e.status.name() == 'SCHEDULED' ? 'badge-warning' :
+                                                   e.status.name() == 'CLOSED'   ? 'badge-muted'   : 'badge-info'}"
+                                  th:text="${e.status}">CLOSED</span>
+                        </td>
+                        <td class="text-sm text-tertiary"
+                            th:text="${e.votedAt != null} ? ${#temporals.format(e.votedAt.atZone(zone), 'dd MMM HH:mm')} : '—'">—</td>
+                        <td class="text-right">
+                            <a th:if="${e.status.name() == 'CLOSED'}"
+                               class="btn btn-secondary btn-sm"
+                               th:href="@{/elections/{code}/results(code=${e.electionCode})}">View results</a>
+                            <span th:if="${e.status.name() != 'CLOSED'}" class="text-xs text-tertiary">
+                                Results available when closed
+                            </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Elections you organize -->
+            <section id="elections">
+                <h2 class="mb-4">Elections you organize</h2>
+                <div th:if="${myElections.isEmpty()}" class="card text-center">
+                    <p class="text-tertiary mb-3">You haven't created any elections yet.</p>
+                    <a class="btn btn-primary" th:href="@{/elections/new}">Create your first election</a>
+                </div>
+                <table th:if="${!myElections.isEmpty()}" class="table">
+                    <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Window</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="e : ${myElections}">
+                        <td class="text-mono text-sm" th:text="${e.electionCode}">ELX-XXXXX</td>
+                        <td th:text="${e.title}">Title</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${e.status.name() == 'ACTIVE'    ? 'badge-success' :
+                                                   e.status.name() == 'SCHEDULED' ? 'badge-warning' :
+                                                   e.status.name() == 'CLOSED'   ? 'badge-muted'   : 'badge-info'}"
+                                  th:text="${e.status}">DRAFT</span>
+                        </td>
+                        <td class="text-sm text-tertiary">
+                            <span th:text="${#temporals.format(e.startTime.atZone(zone), 'dd MMM HH:mm')}"></span>
+                            →
+                            <span th:text="${#temporals.format(e.endTime.atZone(zone), 'dd MMM HH:mm')}"></span>
+                        </td>
+                        <td class="text-right">
+                            <a class="btn btn-ghost btn-sm"
+                               th:href="@{/elections/{code}/edit(code=${e.electionCode})}">Manage</a>
+                            <a th:if="${e.status.name() != 'DRAFT'}"
+                               class="btn btn-secondary btn-sm"
+                               th:href="@{/elections/{code}/results(code=${e.electionCode})}">Results</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </section>
+
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

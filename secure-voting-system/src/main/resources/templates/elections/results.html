@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Results', ~{::section}, ~{::script})}">
+    <section th:if="${r != null}">
+        <div class="container-narrow" th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+            <a class="btn btn-ghost btn-sm mb-4"
+               th:href="@{/elections/{code}/edit(code=${r.election.electionCode})}">← Back to election</a>
+            <p class="text-mono text-xs text-muted mb-1" th:text="${r.election.electionCode}">ELX-XXXXX</p>
+            <h1 th:text="${r.election.title}">Title</h1>
+            <p class="text-tertiary">Results · computed
+                <span th:text="${#temporals.format(r.computedAt.atZone(zone), 'dd MMM yyyy HH:mm')}"></span>
+            </p>
+
+            <!-- Stats -->
+            <div class="grid grid-4 mb-7">
+                <div class="card"><p class="text-xs text-muted mb-1">Total votes</p>
+                    <h2 class="mb-0" th:text="${r.totalVotes}">0</h2></div>
+                <div class="card"><p class="text-xs text-muted mb-1">Eligible voters</p>
+                    <h2 class="mb-0" th:text="${r.eligibleVoters}">0</h2></div>
+                <div class="card"><p class="text-xs text-muted mb-1">Turnout</p>
+                    <h2 class="mb-0">
+                        <span th:text="${#numbers.formatDecimal(r.turnoutPercent, 1, 1)}">0.0</span>%
+                    </h2></div>
+                <div class="card"><p class="text-xs text-muted mb-1">Status</p>
+                    <h2 class="mb-0">
+                        <span class="badge"
+                              th:classappend="${r.election.status.name() == 'CLOSED' ? 'badge-muted' : 'badge-success'}"
+                              th:text="${r.election.status}">ACTIVE</span>
+                    </h2></div>
+            </div>
+
+            <!-- Winner / tie -->
+            <div th:if="${r.tie}" class="alert alert-warning mb-6">
+                <strong>Tie.</strong> <span th:text="${r.winners.size()}">N</span> candidates are tied for first place.
+            </div>
+            <div th:if="${!r.tie and r.winner() != null}" class="alert alert-success mb-6">
+                <strong>Winner:</strong>
+                <span th:text="${r.winner().name()}"></span>
+                with <span th:text="${r.winner().votes()}"></span> votes
+                (<span th:text="${#numbers.formatDecimal(r.winner().percent(), 1, 1)}"></span>%).
+            </div>
+
+            <!-- Chart -->
+            <div class="card mb-6" th:if="${r.totalVotes > 0}">
+                <h2 class="mb-4">Vote distribution</h2>
+                <canvas id="resultsChart" height="120"></canvas>
+            </div>
+
+            <!-- Per-candidate -->
+            <div class="card mb-6">
+                <h2 class="mb-4">Per-candidate breakdown</h2>
+                <table class="table">
+                    <thead>
+                    <tr><th>Rank</th><th>Candidate</th><th>Party</th><th class="text-right">Votes</th><th class="text-right">%</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${r.results}">
+                        <td class="text-mono" th:text="'#' + ${c.rank()}">#1</td>
+                        <td th:text="${c.name()}">Name</td>
+                        <td class="text-tertiary" th:text="${c.party()} ?: '—'">—</td>
+                        <td class="text-right text-mono" th:text="${c.votes()}">0</td>
+                        <td class="text-right text-mono" th:text="${#numbers.formatDecimal(c.percent(), 1, 1)} + '%'">0.0%</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Integrity -->
+            <div class="card">
+                <h2 class="mb-3">Blockchain integrity</h2>
+                <p>
+                    <span th:if="${r.chainValid}" class="badge badge-success">✓ Verified</span>
+                    <span th:if="${!r.chainValid}" class="badge badge-danger">✗ Tamper detected</span>
+                </p>
+                <p class="text-sm text-tertiary mb-2" th:text="${r.chainMessage}">message</p>
+                <p th:if="${r.decryptionFailures > 0}" class="text-sm text-warning">
+                    ⚠ <span th:text="${r.decryptionFailures}">0</span> ballot(s) could not be decrypted and were skipped.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script th:if="${r != null and r.totalVotes > 0}"
+            src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script th:if="${r != null and r.totalVotes > 0}" th:inline="javascript">
+        (function () {
+            var labels = /*[(${chartLabelsJson})]*/ [];
+            var votes  = /*[(${chartVotesJson})]*/  [];
+            var canvas = document.getElementById('resultsChart');
+            if (!canvas || !window.Chart) return;
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Votes',
+                        data: votes,
+                        backgroundColor: 'rgba(139, 149, 255, 0.7)',
+                        borderColor: 'rgba(139, 149, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+        })();
+    </script>
+</th:block>
+</body>
+</html>

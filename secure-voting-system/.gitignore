@@ -1,0 +1,31 @@
+# Build
+target/
+build/
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime data — never commit ledger or keys
+blockchain-data/
+uploads/
+rsa-keys/
+
+# Local env
+application-local.yml
+application-local.properties
+.env

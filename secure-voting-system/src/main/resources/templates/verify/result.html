@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Receipt verified', ~{::section}, ~{})}">
+
+  <section>
+    <div class="container-narrow">
+      <div class="success-tick mb-4">✓</div>
+      <h1>Your vote is in the chain.</h1>
+      <p class="text-tertiary mb-6">
+        Election: <strong th:text="${electionTitle}">Title</strong>
+        <span class="text-mono text-sm">(<span th:text="${electionCode}">CODE</span>)</span>
+      </p>
+
+      <div class="card mb-6">
+        <h2 class="mb-4">Block details</h2>
+        <dl class="dl">
+          <dt>Block index</dt>
+          <dd class="text-mono" th:text="'#' + ${blockIndex}">#0</dd>
+
+          <dt>Block hash</dt>
+          <dd class="text-mono text-xs hash-cell" th:text="${blockHash}">…</dd>
+
+          <dt>Previous hash</dt>
+          <dd class="text-mono text-xs hash-cell" th:text="${prevHash}">…</dd>
+
+          <dt>Nonce</dt>
+          <dd class="text-mono" th:text="${nonce}">0</dd>
+
+          <dt>Mined at</dt>
+          <dd th:text="${blockTimestamp}">…</dd>
+
+          <dt>Encrypted payload</dt>
+          <dd>
+            <code class="text-mono text-xs" th:text="${encryptedPreview}">…</code>
+            <span class="text-tertiary text-sm">
+                        (<span th:text="${encryptedSize}">0</span> chars total)
+                    </span>
+          </dd>
+        </dl>
+      </div>
+
+      <div class="card mb-6">
+        <h2 class="mb-3">Chain integrity</h2>
+        <p>
+          <span th:if="${chainValid}" class="badge badge-success">✓ Chain valid</span>
+          <span th:if="${!chainValid}" class="badge badge-danger">✗ Tamper detected</span>
+        </p>
+        <p class="text-sm text-tertiary mb-0" th:text="${chainMessage}">message</p>
+      </div>
+
+      <div class="alert alert-info">
+        The verification confirms your encrypted ballot is in the chain. It does
+        <strong>not</strong> reveal which candidate you voted for — that secret stays
+        sealed by RSA-2048 until the organizer tallies the results.
+      </div>
+
+      <div class="row gap-3 mt-6">
+        <a class="btn btn-secondary" th:href="@{/verify}">Verify another receipt</a>
+        <a class="btn btn-ghost" th:href="@{/}">Home</a>
+      </div>
+    </div>
+  </section>
+
+</th:block>
+</body>
+</html>

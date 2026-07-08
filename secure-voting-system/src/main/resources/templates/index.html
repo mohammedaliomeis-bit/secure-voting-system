@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Home', ~{::section}, ~{})}">
+
+    <section>
+        <div class="container">
+            <div class="hero">
+                <h1>Vote with confidence.</h1>
+                <p class="text-lg text-secondary">
+                    A tamper-evident voting platform — AES-256 for data at rest,
+                    RSA-2048 for every ballot, and a SHA-256 blockchain you can audit.
+                </p>
+                <div class="row gap-3 mt-6">
+                    <a class="btn btn-primary btn-lg" th:href="@{/register}">Create your account</a>
+                    <a class="btn btn-secondary btn-lg" th:href="@{/login}">Sign in</a>
+                    <a class="btn btn-ghost btn-lg" th:href="@{/verify}">Verify a receipt</a>
+                </div>
+            </div>
+
+            <div class="grid grid-3 mt-9">
+                <div class="card">
+                    <h3>End-to-end encryption</h3>
+                    <p>Every ballot is RSA-encrypted before it ever touches storage. Only the organizer's private key can tally results.</p>
+                </div>
+                <div class="card">
+                    <h3>Blockchain-anchored</h3>
+                    <p>Each vote is mined into a SHA-256 proof-of-work chain. Any tampering is detected instantly and publicly.</p>
+                </div>
+                <div class="card">
+                    <h3>Anonymous receipts</h3>
+                    <p>You get a 16-digit receipt to confirm your vote was counted — without ever revealing how you voted.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</th:block>
+</body>
+</html>

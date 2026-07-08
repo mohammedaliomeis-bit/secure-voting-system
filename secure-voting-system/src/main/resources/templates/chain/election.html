@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Election chain', ~{::section}, ~{})}">
+    <section>
+        <div class="container">
+
+            <a class="btn btn-ghost btn-sm mb-4" th:href="@{/dashboard}">← Back to dashboard</a>
+
+            <header class="row justify-between items-end mb-6">
+                <div>
+                    <p class="text-mono text-xs text-muted mb-1" th:text="${election.electionCode}">ELX-XXXXX</p>
+                    <h1 class="mb-1" th:text="${election.title}">Election title</h1>
+                    <p class="text-tertiary mb-0">
+                        Blockchain blocks recorded for this election.
+                    </p>
+                </div>
+                <div>
+                    <span th:if="${report.valid}" class="badge badge-success">✓ System chain valid</span>
+                    <span th:if="${!report.valid}" class="badge badge-danger">✗ Tamper detected (system-wide)</span>
+                </div>
+            </header>
+
+            <div class="card mb-6">
+                <div class="row justify-between items-center">
+                    <p class="mb-0">
+                        Blocks in this election: <strong th:text="${blocks.size()}">0</strong>
+                    </p>
+                    <p class="mb-0 text-sm text-tertiary">
+                        System total: <strong th:text="${report.totalBlocks}">0</strong> blocks
+                    </p>
+                </div>
+            </div>
+
+            <div class="alert alert-info mb-6" style="background: #e7f5ff; border-left: 4px solid #4263eb; padding: 12px 16px; border-radius: 6px;">
+                <strong>About this view:</strong>
+                These are only the blocks recorded for <em th:text="${election.title}">this election</em>.
+                The integrity check (badge above) covers the entire system chain — because every block is linked
+                via its previous hash, if the system chain is valid then every block in it, including these, is
+                provably untampered.
+            </div>
+
+            <div th:if="${!report.valid}" class="alert alert-danger mb-6">
+                <strong>Chain errors (system-wide):</strong>
+                <ul class="mt-2 mb-0">
+                    <li th:each="err : ${report.errors}" th:text="${err}" class="text-mono text-sm">…</li>
+                </ul>
+            </div>
+
+            <div th:if="${blocks.isEmpty()}" class="card text-center">
+                <p class="text-tertiary mb-0">
+                    No votes have been recorded on the blockchain for this election yet.
+                </p>
+            </div>
+
+            <table th:if="${!blocks.isEmpty()}" class="table">
+                <thead>
+                <tr>
+                    <th>#</th><th>Mined at</th><th>Nonce</th><th>Hash</th><th>Prev hash</th><th>Payload</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${blocks}">
+                    <td class="text-mono" th:text="'#' + ${b.blockIndex()}">#0</td>
+                    <td class="text-sm" th:text="${b.timestamp()}">…</td>
+                    <td class="text-mono text-sm" th:text="${b.nonce()}">0</td>
+                    <td class="text-mono text-xs hash-cell" th:text="${b.hash()}">…</td>
+                    <td class="text-mono text-xs hash-cell" th:text="${b.prevHash()}">…</td>
+                    <td class="text-mono text-xs payload-cell"
+                        th:text="${#strings.abbreviate(b.encryptedData(), 60)}">…</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <p class="text-center mt-6">
+                <a class="btn btn-ghost btn-sm" th:href="@{/chain}">View the full system chain →</a>
+            </p>
+
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

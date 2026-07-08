@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<body>
+
+<nav th:fragment="navbar" class="navbar">
+    <div class="container navbar-inner">
+        <a class="navbar-brand" th:href="@{/}">
+            <span class="brand-mark">S</span>
+            <span>SecureVote</span>
+        </a>
+
+        <ul class="navbar-nav">
+            <li sec:authorize="isAuthenticated()">
+                <a class="nav-link" th:href="@{/dashboard}">Dashboard</a>
+            </li>
+            <li sec:authorize="isAuthenticated()">
+                <a class="nav-link" th:href="@{/elections/new}">Create election</a>
+            </li>
+            <li><a class="nav-link" th:href="@{/verify}">Verify receipt</a></li>
+            <li><a class="nav-link" th:href="@{/chain}">Chain</a></li>
+
+            <li sec:authorize="!isAuthenticated()">
+                <a class="nav-link" th:href="@{/login}">Sign in</a>
+            </li>
+            <li sec:authorize="!isAuthenticated()">
+                <a class="btn btn-primary btn-sm" th:href="@{/register}">Get started</a>
+            </li>
+
+            <li sec:authorize="isAuthenticated()">
+        <span class="user-pill">
+          <span class="avatar" sec:authentication="name"
+                th:text="${#strings.toUpperCase(#strings.substring(#authentication.name, 0, 1))}">U</span>
+          <span sec:authentication="name">user@example.com</span>
+        </span>
+            </li>
+            <li sec:authorize="isAuthenticated()">
+                <form th:action="@{/logout}" method="post" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">Log out</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+</body>
+</html>

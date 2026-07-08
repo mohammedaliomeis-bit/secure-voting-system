@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Blockchain', ~{::section}, ~{})}">
+
+    <section>
+        <div class="container">
+
+            <header class="row justify-between items-end mb-6">
+                <div>
+                    <h1 class="mb-1">Blockchain</h1>
+                    <p class="text-tertiary mb-0">
+                        SHA-256 proof-of-work chain. Every vote is appended as an encrypted block.
+                    </p>
+                </div>
+                <div>
+                    <span th:if="${report.valid}" class="badge badge-success">✓ Chain valid</span>
+                    <span th:if="${!report.valid}" class="badge badge-danger">✗ Tamper detected</span>
+                </div>
+            </header>
+
+            <div class="card mb-6">
+                <div class="row justify-between items-center">
+                    <p class="mb-0">
+                        Total blocks: <strong th:text="${report.totalBlocks}">0</strong>
+                    </p>
+                    <p class="mb-0 text-sm text-tertiary"
+                       th:text="${report.valid ? 'No errors detected.' : report.errors.size() + ' error(s) detected'}">…</p>
+                </div>
+            </div>
+
+            <div th:if="${!report.valid}" class="alert alert-danger mb-6">
+                <strong>Chain errors:</strong>
+                <ul class="mt-2 mb-0">
+                    <li th:each="err : ${report.errors}" th:text="${err}" class="text-mono text-sm">…</li>
+                </ul>
+            </div>
+
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>#</th><th>Mined at</th><th>Nonce</th><th>Hash</th><th>Prev hash</th><th>Payload</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${blocks}">
+                    <td class="text-mono" th:text="'#' + ${b.blockIndex()}">#0</td>
+                    <td class="text-sm" th:text="${b.timestamp()}">…</td>
+                    <td class="text-mono text-sm" th:text="${b.nonce()}">0</td>
+                    <td class="text-mono text-xs hash-cell" th:text="${b.hash()}">…</td>
+                    <td class="text-mono text-xs hash-cell" th:text="${b.prevHash()}">…</td>
+                    <td class="text-mono text-xs payload-cell"
+                        th:text="${#strings.abbreviate(b.encryptedData(), 60)}">…</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</th:block>
+</body>
+</html>

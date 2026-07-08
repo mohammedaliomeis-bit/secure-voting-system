@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Error', ~{::section}, ~{})}">
+
+    <section class="auth-shell">
+        <div class="auth-card text-center">
+            <div class="error-code" th:text="${status} ?: '500'">500</div>
+            <h1 class="mb-2" th:text="${title} ?: 'Something went wrong'">Error</h1>
+            <p class="text-tertiary mb-6"
+               th:text="${message} ?: 'An unexpected error occurred.'">Message</p>
+            <div class="row gap-3 justify-center">
+                <a class="btn btn-primary" th:href="@{/}">Go home</a>
+                <a class="btn btn-ghost" th:href="@{/dashboard}">Dashboard</a>
+            </div>
+        </div>
+    </section>
+
+</th:block>
+</body>
+</html>

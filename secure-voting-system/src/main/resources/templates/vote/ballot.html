@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Cast your vote', ~{::section}, ~{})}">
+    <section>
+        <div class="container-narrow">
+            <p class="text-mono text-xs text-muted mb-1" th:text="${election.electionCode}">ELX-XXXXX</p>
+            <h1 class="mb-2" th:text="${election.title}">Title</h1>
+            <p class="text-tertiary mb-6">
+                Select your candidate and confirm. Your ballot is encrypted with RSA-2048
+                before being appended to the blockchain. This action cannot be undone.
+            </p>
+
+            <form th:action="@{/vote/{code}/ballot(code=${election.electionCode})}" method="post" id="ballotForm">
+                <div class="grid grid-auto mb-6">
+                    <label th:each="c : ${candidates}" class="ballot-option">
+                        <input type="radio" name="candidateId" th:value="${c.id}" required>
+
+                        <img th:if="${c.photoPath != null}"
+                             th:src="@{/uploads/candidates/{n}(n=${c.photoPath})}"
+                             th:alt="${c.name}"
+                             style="width: 120px; height: 120px; object-fit: cover; object-position: center; border-radius: 8px; border: 1px solid var(--border, #dee2e6); display: block; margin: 0 auto 12px;">
+                        <div th:if="${c.photoPath == null}"
+                             aria-hidden="true"
+                             style="width: 120px; height: 120px; border-radius: 8px; border: 1px solid var(--border, #dee2e6); background: #f1f3f5; color: #6c757d; font-size: 2.5rem; font-weight: 600; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                            <span th:text="${#strings.toUpperCase(#strings.substring(c.name,0,1))}">·</span>
+                        </div>
+
+                        <span class="ballot-option-body">
+                            <span class="ballot-option-name" th:text="${c.name}">Name</span>
+                            <span class="ballot-option-party text-tertiary text-sm" th:text="${c.party} ?: ''"></span>
+                            <span class="ballot-option-desc text-sm" th:text="${c.description} ?: ''"></span>
+                        </span>
+                    </label>
+                </div>
+                <div class="row gap-3 justify-end">
+                    <a class="btn btn-ghost" th:href="@{/dashboard}">Cancel</a>
+                    <button type="submit" class="btn btn-primary btn-lg"
+                            onclick="return confirm('Cast your vote now? This cannot be changed.');">
+                        Cast my vote
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

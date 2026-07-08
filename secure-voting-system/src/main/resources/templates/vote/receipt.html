@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Vote receipt', ~{::section}, ~{})}">
+
+    <section class="auth-shell">
+        <div class="auth-card text-center">
+            <div class="success-tick mb-4">✓</div>
+            <h1 class="mb-2">Your vote is recorded.</h1>
+            <p class="text-tertiary mb-6" th:text="'Election: ' + ${receipt.electionTitle}">Election: …</p>
+
+            <p class="text-sm text-secondary">Your receipt code (save this — it won't be shown again):</p>
+            <div class="receipt-box text-mono" th:text="${receipt.receiptCode}">XXXX-XXXX-XXXX-XXXX</div>
+
+            <p class="text-sm text-tertiary mt-4">
+                Recorded in blockchain block
+                <strong class="text-mono" th:text="'#' + ${receipt.blockIndex}">#0</strong>.
+            </p>
+
+            <div class="row gap-3 justify-center mt-6">
+                <a class="btn btn-secondary" th:href="@{/verify}">Verify my receipt</a>
+                <a class="btn btn-ghost" th:href="@{/dashboard}">Back to dashboard</a>
+            </div>
+
+            <p class="text-xs text-muted mt-6">
+                Your receipt does <strong>not</strong> reveal which candidate you voted for —
+                it only proves your encrypted ballot is in the chain.
+            </p>
+        </div>
+    </section>
+
+</th:block>
+</body>
+</html>

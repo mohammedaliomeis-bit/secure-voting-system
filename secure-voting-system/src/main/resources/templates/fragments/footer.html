@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<footer th:fragment="footer" class="footer">
+    <div class="container footer-inner">
+        <div>
+            &copy; <span th:text="${#dates.year(#dates.createNow())}">2026</span>
+            SecureVote &middot; Blockchain-backed e-voting
+        </div>
+        <div>
+            <a th:href="@{/verify}">Verify receipt</a>
+            &nbsp;&middot;&nbsp;
+            <a th:href="@{/chain}">Public ledger</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

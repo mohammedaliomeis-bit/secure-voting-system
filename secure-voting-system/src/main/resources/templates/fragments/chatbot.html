@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="widget">
+    <button id="chatbotToggle" class="chatbot-toggle"
+            type="button" aria-label="Open assistant">💬</button>
+
+    <section id="chatbotPanel" class="chatbot-panel" aria-hidden="true">
+        <header class="chatbot-header">
+            <h3>Voting Assistant</h3>
+            <button id="chatbotClose" class="close-btn" type="button" aria-label="Close">×</button>
+        </header>
+        <div id="chatbotMessages" class="chatbot-messages"></div>
+        <div id="chatbotSuggestions" class="chatbot-suggestions"></div>
+        <form id="chatbotForm" class="chatbot-input">
+            <input id="chatbotInput" type="text" placeholder="Ask a question…"
+                   autocomplete="off" maxlength="500"/>
+            <button type="submit">Send</button>
+        </form>
+    </section>
+</div>
+
+</body>
+</html>

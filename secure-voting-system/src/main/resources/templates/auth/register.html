@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Create account', ~{::section}, ~{})}">
+
+    <section class="auth-shell">
+        <div class="auth-card">
+            <h1 class="text-center mb-2">Create your account</h1>
+            <p class="text-center text-tertiary mb-6">We'll email a 6-digit code to verify your address.</p>
+
+            <form th:action="@{/register}" th:object="${form}" method="post" novalidate>
+                <div class="grid grid-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label" for="firstName">First name <span class="required">*</span></label>
+                        <input id="firstName" type="text" class="form-control"
+                               th:field="*{firstName}" maxlength="80" required autofocus>
+                        <span class="form-error" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="lastName">Last name <span class="required">*</span></label>
+                        <input id="lastName" type="text" class="form-control"
+                               th:field="*{lastName}" maxlength="80" required>
+                        <span class="form-error" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email <span class="required">*</span></label>
+                    <input id="email" type="email" class="form-control"
+                           th:field="*{email}" autocomplete="email" maxlength="254" required>
+                    <span class="form-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="dateOfBirth">Date of birth <span class="required">*</span></label>
+                    <input id="dateOfBirth" type="date" class="form-control"
+                           th:field="*{dateOfBirth}" required>
+                    <span class="form-error" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password <span class="required">*</span></label>
+                    <input id="password" type="password" class="form-control"
+                           th:field="*{password}" autocomplete="new-password" required minlength="8">
+                    <small class="form-help">
+                        8+ characters with at least one uppercase, one lowercase, one digit, and one symbol. No whitespace.
+                    </small>
+                    <span class="form-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirmPassword">Confirm password <span class="required">*</span></label>
+                    <input id="confirmPassword" type="password" class="form-control"
+                           th:field="*{confirmPassword}" autocomplete="new-password" required>
+                    <span class="form-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg mt-2">Create account</button>
+            </form>
+
+            <p class="text-center text-tertiary mt-6 mb-0">
+                Already registered? <a th:href="@{/login}">Sign in</a>.
+            </p>
+        </div>
+    </section>
+
+</th:block>
+</body>
+</html>

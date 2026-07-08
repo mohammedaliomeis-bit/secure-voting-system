@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Invitations', ~{::section}, ~{})}">
+    <section>
+        <div class="container-narrow">
+
+            <p class="text-mono text-xs text-muted mb-1" th:text="${election.electionCode}">ELX-XXXXX</p>
+            <h1 class="mb-1">Invitations</h1>
+            <p class="text-tertiary mb-6" th:text="${election.title}"></p>
+
+            <div th:if="${info}" class="callout callout-success mb-4"
+                 style="padding: 12px 16px; border-radius: 8px; background: #d3f9d8; border: 1px solid #69db7c; color: #2b8a3e;">
+                <span th:text="${info}"></span>
+            </div>
+            <div th:if="${globalError}" class="callout callout-warning mb-4"
+                 style="padding: 12px 16px; border-radius: 8px; background: #fff5f5; border: 1px solid #ffa8a8; color: #c92a2a;">
+                <span th:text="${globalError}"></span>
+            </div>
+
+            <div class="row gap-3 mb-6">
+                <a th:href="@{/elections/{code}/edit(code=${election.electionCode})}"
+                   class="btn btn-secondary">← Back to election</a>
+
+                <form th:action="@{/elections/{code}/invitations/send-all(code=${election.electionCode})}"
+                      method="post" class="d-inline">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-primary">
+                        Generate &amp; send all invitations
+                    </button>
+                </form>
+            </div>
+
+            <p class="text-sm text-tertiary mb-4">
+                Click <strong>Generate &amp; send all</strong> to create one unique invitation per voter on the roll and email each voter their personal link. Safe to click multiple times — already-sent invitations won't be duplicated.
+            </p>
+
+            <table class="table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                <tr style="border-bottom: 2px solid #dee2e6; text-align: left;">
+                    <th style="padding: 8px;">#</th>
+                    <th style="padding: 8px;">Status</th>
+                    <th style="padding: 8px;">Sent</th>
+                    <th style="padding: 8px;">Accepted by</th>
+                    <th style="padding: 8px;">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="inv, iter : ${invitations}"
+                    style="border-bottom: 1px solid #f1f3f5;"
+                    th:with="zone=${T(java.time.ZoneId).systemDefault()}">
+                    <td style="padding: 8px;" th:text="${iter.count}">1</td>
+                    <td style="padding: 8px;">
+                            <span class="badge"
+                                  th:classappend="${inv.status.name() == 'ACCEPTED'  ? 'badge-success' :
+                                                   inv.status.name() == 'SENT'      ? 'badge-info'    :
+                                                   inv.status.name() == 'PENDING'   ? 'badge-warning' :
+                                                   inv.status.name() == 'REVOKED'   ? 'badge-muted'   :
+                                                                                      'badge-muted'}"
+                                  th:text="${inv.status}">PENDING</span>
+                    </td>
+                    <td style="padding: 8px;" class="text-sm text-tertiary">
+                            <span th:if="${inv.sentAt != null}"
+                                  th:text="${#temporals.format(inv.sentAt.atZone(zone), 'dd MMM HH:mm')}">—</span>
+                        <span th:if="${inv.sentAt == null}">—</span>
+                    </td>
+                    <td style="padding: 8px;" class="text-sm">
+                            <span th:if="${inv.acceptedByUser != null}"
+                                  class="text-success">
+                                ✓ <span th:text="${#temporals.format(inv.acceptedAt.atZone(zone), 'dd MMM HH:mm')}"></span>
+                            </span>
+                        <span th:if="${inv.acceptedByUser == null}" class="text-tertiary">Not yet accepted</span>
+                    </td>
+                    <td style="padding: 8px;">
+                        <div class="row gap-2">
+                            <form th:if="${inv.status.name() != 'ACCEPTED' and inv.status.name() != 'REVOKED'}"
+                                  th:action="@{/elections/{code}/invitations/{id}/resend(code=${election.electionCode},id=${inv.id})}"
+                                  method="post" class="d-inline">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn btn-sm btn-secondary">Resend</button>
+                            </form>
+                            <form th:if="${inv.status.name() != 'REVOKED'}"
+                                  th:action="@{/elections/{code}/invitations/{id}/revoke(code=${election.electionCode},id=${inv.id})}"
+                                  method="post" class="d-inline"
+                                  onsubmit="return confirm('Revoke this invitation? The voter will lose access until you reissue.');">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn btn-sm btn-secondary">Revoke</button>
+                            </form>
+                            <form th:if="${inv.status.name() == 'REVOKED'}"
+                                  th:action="@{/elections/{code}/invitations/{id}/reissue(code=${election.electionCode},id=${inv.id})}"
+                                  method="post" class="d-inline">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn btn-sm btn-primary">Reissue</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(invitations)}">
+                    <td colspan="5" style="padding: 20px; text-align: center;" class="text-tertiary">
+                        No invitations yet. Upload your voter roll, then click <em>Generate &amp; send all</em>.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

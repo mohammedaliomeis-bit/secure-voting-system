@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Verify email', ~{::section}, ~{})}">
+
+    <section class="auth-shell">
+        <div class="auth-card">
+            <h1 class="text-center mb-2">Check your inbox</h1>
+            <p class="text-center text-tertiary mb-6">
+                We sent a 6-digit code to your email. It expires in 10 minutes.
+            </p>
+
+            <form th:action="@{/verify-otp}" th:object="${form}" method="post" novalidate>
+                <div class="form-group">
+                    <label class="form-label" for="code">Verification code <span class="required">*</span></label>
+                    <input id="code" type="text" class="form-control text-center text-mono text-xl"
+                           th:field="*{code}" inputmode="numeric" pattern="\d{6}" maxlength="6"
+                           autocomplete="one-time-code" required autofocus
+                           style="letter-spacing: 0.5em;">
+                    <span class="form-error" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></span>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Verify</button>
+            </form>
+
+            <form th:action="@{/resend-otp}" method="post" class="mt-4">
+                <button type="submit" class="btn btn-ghost btn-block">Resend code</button>
+            </form>
+        </div>
+    </section>
+
+</th:block>
+</body>
+</html>

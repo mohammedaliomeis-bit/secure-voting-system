@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Verify receipt', ~{::section}, ~{})}">
+
+    <section class="auth-shell">
+        <div class="auth-card">
+            <h1 class="text-center mb-2">Verify a receipt</h1>
+            <p class="text-center text-tertiary mb-6">
+                Enter your 16-digit receipt code. We'll confirm your ballot is in the blockchain
+                and the chain has not been tampered with.
+            </p>
+
+            <form th:action="@{/verify}" method="post">
+                <div class="form-group">
+                    <label class="form-label" for="receipt">Receipt code <span class="required">*</span></label>
+                    <input id="receipt" name="receipt" type="text"
+                           class="form-control text-center text-mono"
+                           placeholder="XXXX-XXXX-XXXX-XXXX"
+                           maxlength="25" required autofocus
+                           style="letter-spacing: 0.15em;">
+                    <small class="form-help">Dashes optional — we'll strip non-digits.</small>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Verify</button>
+            </form>
+        </div>
+    </section>
+
+</th:block>
+</body>
+</html>

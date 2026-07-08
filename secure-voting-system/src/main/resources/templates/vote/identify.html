@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<th:block th:replace="~{fragments/layout :: page('Identify yourself', ~{::section}, ~{})}">
+
+    <section>
+        <div class="container-narrow">
+            <p class="text-mono text-xs text-muted mb-1" th:text="${election.electionCode}">ELX-XXXXX</p>
+            <h1 class="mb-2" th:text="${election.title}">Title</h1>
+            <p class="text-tertiary mb-6">
+                Enter your details exactly as they appear on the voter roll.
+                We'll email a 6-digit code to confirm before you cast your ballot.
+            </p>
+
+            <form th:action="@{/vote/{code}/identify(code=${election.electionCode})}"
+                  method="post" class="card card-elevated">
+
+                <div th:each="f : ${fields}" class="form-group">
+                    <label class="form-label" th:for="${f.fieldKey}"
+                           th:text="${f.fieldLabel} + (${f.required} ? ' *' : '')">Label</label>
+
+                    <input class="form-control"
+                           th:id="${f.fieldKey}"
+                           th:name="${f.fieldKey}"
+                           th:type="${f.fieldType.name() == 'NUMBER' ? 'number' :
+                                  f.fieldType.name() == 'EMAIL'  ? 'email'  :
+                                  f.fieldType.name() == 'DATE'   ? 'date'   : 'text'}"
+                           th:required="${f.required}"
+                           autocomplete="off">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Continue</button>
+            </form>
+        </div>
+    </section>
+
+</th:block>
+</body>
+</html>
